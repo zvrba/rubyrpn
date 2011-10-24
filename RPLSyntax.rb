@@ -35,7 +35,7 @@ class RPLSyntax < Parslet::Parser
 end
 
 #
-# AST
+# AST: convert to ruby's built-in classes; don't need anything fancy
 #
 
 class RPLAST < Parslet::Transform
@@ -44,8 +44,13 @@ class RPLAST < Parslet::Transform
   rule(:var    => simple(:x))         { String(x) }
   rule(:op     => simple(:x))         { String(x) }
   rule(:vector => sequence(:x))       { Vector[*x] }
-  rule(:matrix => sequence(:x))       { Matrix[*x] }
   rule(:list   => sequence(:x))       { Array[*x] }
+  rule(:matrix => sequence(:x))       {
+    begin
+      Matrix[*x]
+    rescue ExceptionForMatrix::ErrDimensionMismatch => err
+      nil
+    end }
 end
 
 if $0 == __FILE__ then
@@ -55,7 +60,6 @@ if $0 == __FILE__ then
       print "rpl$ "
       gets
       tree = rplsyn.parse($_.chomp!)
-      p tree
       p RPLAST.new.apply(tree)
     rescue Parslet::ParseFailed => error
       puts error, rplsyn.root.error_tree
