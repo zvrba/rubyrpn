@@ -1,4 +1,9 @@
 require 'parslet'
+require 'matrix'
+
+#
+# The syntax parser
+#
 
 class RPLSyntax < Parslet::Parser
   # Low-level lexical elements
@@ -14,7 +19,7 @@ class RPLSyntax < Parslet::Parser
 
   # Lexical atoms -- :flonum, :intnum, :var, :op
   rule (:number)   { (flonum.as(:flonum) | intnum.as(:intnum)) }
-  rule (:var)      { (match("'") >> (match('[a-zA-Z0-9_]').repeat(1))).as(:var) }
+  rule (:var)      { (match("'") >> match('[a-zA-Z0-9_]').repeat(1)).as(:var) }
   rule (:op)       { (match('[+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
   rule (:atom)     { number | var | op }
 
@@ -26,8 +31,21 @@ class RPLSyntax < Parslet::Parser
 
   # Acceptable input
   rule (:input)    { ((atom | comp) >> ws).repeat(1) }
-
   root (:input)
+end
+
+#
+# AST
+#
+
+class RPLAST < Parslet::Transform
+  rule(:intnum => simple(:x))         { Integer(x) }
+  rule(:flonum => simple(:x))         { Float(x) }
+  rule(:var    => simple(:x))         { String(x) }
+  rule(:op     => simple(:x))         { String(x) }
+  rule(:vector => sequence(:x))       { Vector[*x] }
+  rule(:matrix => sequence(:x))       { Matrix[*x] }
+  rule(:list   => sequence(:x))       { Array[*x] }
 end
 
 if $0 == __FILE__ then
@@ -36,7 +54,9 @@ if $0 == __FILE__ then
     begin
       print "rpl$ "
       gets
-      p rplsyn.parse($_.chomp!)
+      tree = rplsyn.parse($_.chomp!)
+      p tree
+      p RPLAST.new.apply(tree)
     rescue Parslet::ParseFailed => error
       puts error, rplsyn.root.error_tree
     end
