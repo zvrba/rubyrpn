@@ -21,7 +21,7 @@ class RPLSyntax < Parslet::Parser
   rule (:number)   { (flonum.as(:flonum) | intnum.as(:intnum)) }
   rule (:varname)  { match('[a-zA-Z0-9_]').repeat(1).as(:var) }
   rule (:var)      { match("'") >> varname }
-  rule (:op)       { (match('[+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
+  rule (:op)       { (match('[0-9+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
   rule (:atom)     { number | var | op }
 
   # Composites -- vector, matrix, list
