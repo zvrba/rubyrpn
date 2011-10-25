@@ -1,9 +1,8 @@
+# This file defines the RPL parser and additional types that may be found on
+# the stack alongside with standard ruby types (Integer, Float, etc.)
+
 require 'parslet'
 require 'matrix'
-
-#
-# The syntax parser
-#
 
 class RPLSyntax < Parslet::Parser
   # Low-level lexical elements
@@ -19,8 +18,8 @@ class RPLSyntax < Parslet::Parser
 
   # Lexical atoms -- :flonum, :intnum, :var, :op
   rule (:number)   { (flonum.as(:flonum) | intnum.as(:intnum)) }
-  rule (:varname)  { match('[a-zA-Z0-9_]').repeat(1).as(:var) }
-  rule (:var)      { match("'") >> varname }
+  rule (:varname)  { match('[a-zA-Z0-9_]').repeat(1) }
+  rule (:var)      { (match("[@!]").maybe >> varname).as(:varname) }
   rule (:op)       { (match('[0-9+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
   rule (:atom)     { number | var | op }
 
@@ -35,22 +34,35 @@ class RPLSyntax < Parslet::Parser
   root (:input)
 end
 
-#
-# AST: convert to ruby's built-in classes; don't need anything fancy
-#
-
-class RPLVar
+class RPLIdentifier
   def initialize(name)
     @name = name
   end
-  attr_reader :name
+
+  def name
+    if command? then @name else @name[1..-1] end
+  end
+
+  def mode_read?
+    name[0] == "@"
+  end
+
+  def mode_write?
+    name[0] == "!"
+  end
+
+  def command?
+    not (mode_read? or mode_write?)
+  end
 end
 
-class RPLOp
-  def initialize(name)
-    @name = name
+# Errors have a cause and a message.  The cause is the immediate input string
+# that caused the error.
+
+class RPLError
+  def initialize(cause, message)
+    
   end
-  attr_reader :name
 end
 
 class RPLAST < Parslet::Transform
@@ -62,8 +74,8 @@ class RPLAST < Parslet::Transform
 
   rule(:intnum => simple(:x))         { Integer(x) }
   rule(:flonum => simple(:x))         { Float(x) }
-  rule(:var    => simple(:x))         { RPLVar.new(x) }
-  rule(:op     => simple(:x))         { RPLOp.new(x) }
+  rule(:var    => simple(:x))         { RPLQuotedId.new(x) }
+  rule(:op     => simple(:x))         { RPLPlainId.new(x) }
   rule(:vector => sequence(:x))       { Vector[*x] }
   rule(:list   => sequence(:x))       { Array[*x] }
   rule(:matrix => sequence(:x))       { RPLAST.MakeMatrix(*x) }
