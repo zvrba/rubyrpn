@@ -43,11 +43,34 @@ a rather user-unfriendly language.
 Features
 ========
 
+Types
+-----
+Instances of the following ruby classes may be encountered on the RPL stack:
+Integer, Float, Vector, Matrix, Array, String.  Arrays implement lists, and
+strings are used to report errors -- i.e., there are no commands for string
+handling!
+
 Identifiers
 -----------
 There are three kinds of identifiers: those "escaped" with @ or ! and
 unescaped, e.g.: 1) @var, 2) !var, 3) var.  Case 1 looks up the value
 of 'var' and pushes it onto the stack.  Case 2 pops an element from
 the stack and stores into 'var'.  Case 3 looks up the command named
-'var' and executes it.
+'var' and executes it.  Note that commands and variables live in
+different namespaces: since variable names have mandatory prefix,
+they cannot be confused with commands of the same name.
 
+Error handling
+--------------
+Errors are reported by pushing special objects on top of the stack.  The rest
+of the evaluation is immediatelly abandoned.
+
+Programmability
+---------------
+All user-defined functions must be implemented in Ruby.  The extension
+mechanism will be documented later.
+
+Interesting links
+=================
+http://float-formats.rubyforge.org/
+http://flt.rubyforge.org/

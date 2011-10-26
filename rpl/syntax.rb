@@ -19,7 +19,7 @@ class RPLSyntax < Parslet::Parser
   # Lexical atoms -- :flonum, :intnum, :var, :op
   rule (:number)   { (flonum.as(:flonum) | intnum.as(:intnum)) }
   rule (:varname)  { match('[a-zA-Z0-9_]').repeat(1) }
-  rule (:var)      { (match("[@!]").maybe >> varname).as(:varname) }
+  rule (:var)      { (match("[@!]") >> varname).as(:var) }
   rule (:op)       { (match('[0-9+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
   rule (:atom)     { number | var | op }
 
@@ -34,48 +34,46 @@ class RPLSyntax < Parslet::Parser
   root (:input)
 end
 
+# An identifier can denote either a read/write from a variable (@/! prefix), or
+# an executable command (no prefix).
+
 class RPLIdentifier
   def initialize(name)
     @name = name
   end
 
-  def name
-    if command? then @name else @name[1..-1] end
-  end
+  def name ;        if command? then @name else @name[1..-1] end end
+  def read? ;       name[0] == "@" end
+  def write? ;      name[0] == "!"  end
+  def execute? ;    not (read? or write?) end
+  def to_s ;        name end
+end
 
-  def mode_read?
-    name[0] == "@"
-  end
+# This is the exception class used by commands to report errors.  A RPL error
+# has a cause (command/input string that causet the error) and a message which
+# explains the condition in more detail.
 
-  def mode_write?
-    name[0] == "!"
-  end
-
-  def command?
-    not (mode_read? or mode_write?)
+class RPLException < Exception
+  def initialize(message)
+    super(message)
   end
 end
 
-# Errors have a cause and a message.  The cause is the immediate input string
-# that caused the error.
-
-class RPLError
-  def initialize(cause, message)
-    
-  end
+def rpl_fail(cause, message)
+  raise RPLException, "#{@message} (offending expression: `#{@cause}`)"
 end
 
 class RPLAST < Parslet::Transform
   def RPLAST.MakeMatrix(*rows)
     Matrix[*rows]
   rescue ExceptionForMatrix::ErrDimensionMismatch
-    $!
+    raise rpl_fail(rows.inspect, "inconsistent row lengths in matrix literal")
   end
 
   rule(:intnum => simple(:x))         { Integer(x) }
   rule(:flonum => simple(:x))         { Float(x) }
-  rule(:var    => simple(:x))         { RPLQuotedId.new(x) }
-  rule(:op     => simple(:x))         { RPLPlainId.new(x) }
+  rule(:var    => simple(:x))         { RPLIdentifier.new(x) }
+  rule(:op     => simple(:x))         { RPLIdentifier.new(x) }
   rule(:vector => sequence(:x))       { Vector[*x] }
   rule(:list   => sequence(:x))       { Array[*x] }
   rule(:matrix => sequence(:x))       { RPLAST.MakeMatrix(*x) }
