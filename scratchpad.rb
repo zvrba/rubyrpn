@@ -7,8 +7,11 @@ formats = {}
 while true
   print "rpl> "
   sequencer.interpret(gets.chomp!)
-  sequencer.format_stack(formats).each do |item|
-    puts item
+  formatted_stack = sequencer.format_stack(formats)
+  depth = formatted_stack.length
+
+  sequencer.format_stack(formats).each.with_index do |item,i|
+    puts(sprintf("%03d: ", depth-i) + item)
   end
   puts "\n"
 end
