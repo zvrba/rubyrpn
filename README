@@ -50,6 +50,9 @@ Integer, Float, Vector, Matrix, Array, String.  Arrays implement lists, and
 strings are used to report errors -- i.e., there are no commands for string
 handling!
 
+Currently, lists cannot be nested and don't offer any useful functionality.
+This will be amended later.
+
 Identifiers
 -----------
 There are three kinds of identifiers: those "escaped" with @ or ! and

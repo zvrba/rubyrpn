@@ -60,7 +60,7 @@ class RPLException < Exception
 end
 
 def rpl_fail(cause, message)
-  raise RPLException, "#{@message} (offending expression: `#{@cause}`)"
+  raise RPLException, "#{message} (offending expression: `#{cause.inspect}`)"
 end
 
 class RPLAST < Parslet::Transform

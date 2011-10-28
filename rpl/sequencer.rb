@@ -2,6 +2,8 @@
 
 # The main interpreter class.
 class RPLSequencer
+
+  # No arguments -- creates a "clean slate" interpreter.
   def initialize
     @parser = RPLSyntax.new
     @walker = RPLAST.new
@@ -9,15 +11,28 @@ class RPLSequencer
     @vars = {}
     @ops = {}
     @protected_opnames = []
+    @default_printer = proc { |x| x.inspect }
   end
 
+  # Interpret a complete line.  The input is currenlty ONLY line-based.
   def interpret(input_line)
-    parsed_tree = parser.parse(input_line.chomp)
-    walker.apply(parsed_tree).each { |item| do_item item }
+    parsed_tree = @parser.parse(input_line.chomp)
+    @walker.apply(parsed_tree).each { |item| do_item item }
   rescue Parslet::ParseFailed
-    stack << "PARSE ERROR: $!"
+    @stack << "PARSE ERROR: #{$!}"
   rescue RPLException
-    stack << "ERROR: $!"
+    @stack << "ERROR: #{$!}"
+  end
+
+  # Return an array of strings representing stack items.  formats is a hash
+  # that maps a class type (e.g. Integer) to a proc that produces a string
+  # from its single argument; if the value is not present, an inspect method
+  # is called on the object.
+  def format_stack(formats)
+    @stack.collect do |obj|
+      printer = formats[obj.class] || @default_printer
+      printer.call(obj)
+    end
   end
 
 private
@@ -35,7 +50,7 @@ private
   end
 
   def do_value(item)
-    stack << item
+    @stack << item
   end
 end
 

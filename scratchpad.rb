@@ -1,15 +1,14 @@
 require './rpl/syntax'
+require './rpl/sequencer'
 
-if $0 == __FILE__ then
-  rplsyn = RPLSyntax.new
-  while true
-    begin
-      print "rpl$ "
-      gets
-      tree = rplsyn.parse($_.chomp!)
-      p RPLAST.new.apply(tree)
-    rescue Parslet::ParseFailed => error
-      puts error
-    end
+sequencer = RPLSequencer.new
+formats = {}
+
+while true
+  print "rpl> "
+  sequencer.interpret(gets.chomp!)
+  sequencer.format_stack(formats).each do |item|
+    puts item
   end
+  puts "\n"
 end
