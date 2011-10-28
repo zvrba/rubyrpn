@@ -10,7 +10,6 @@ class RPLSequencer
     @stack = []
     @vars = {}
     @ops = {}
-    @protected_opnames = []
     @default_formatter = proc { |o| o.inspect }
   end
 
@@ -33,6 +32,22 @@ class RPLSequencer
       formatter = formats[obj.class] || @default_formatter
       formatter.call(obj)
     end
+  end
+
+  # Register an operation with the given name and parameters.  overload is an
+  # array of parameter types that are matched against the stack types using
+  # kind_of? (which means that superclasses can be used).  The rightmost type
+  # in the array matches the TOP of the stack.
+  def register_op(name, overload, &proc)
+    @ops[name] = {:overloads => [], :procs => [] } unless @ops[name]
+    entry      = @ops[name]
+    overload_i = entry[:overloads].find_index overload
+    status     = overload_i ? :replaced : :added
+    overload_i = name_entry[:overloads].length unless overload_i
+
+    op[:overloads][overload_i] = types
+    op[:procs][overload_i]     = proc
+    return status
   end
 
 private

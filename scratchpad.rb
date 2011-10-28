@@ -1,4 +1,7 @@
+# Parslet and parser classes generate many warnings
 require './rpl/syntax'
+
+$VERBOSE = true
 require './rpl/sequencer'
 
 sequencer = RPLSequencer.new
