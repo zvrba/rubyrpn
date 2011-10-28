@@ -11,7 +11,7 @@ class RPLSequencer
     @vars = {}
     @ops = {}
     @protected_opnames = []
-    @default_printer = proc { |x| x.inspect }
+    @default_formatter = proc { |o| o.inspect }
   end
 
   # Interpret a complete line.  The input is currenlty ONLY line-based.
@@ -30,8 +30,8 @@ class RPLSequencer
   # is called on the object.
   def format_stack(formats)
     @stack.collect do |obj|
-      printer = formats[obj.class] || @default_printer
-      printer.call(obj)
+      formatter = formats[obj.class] || @default_formatter
+      formatter.call(obj)
     end
   end
 
