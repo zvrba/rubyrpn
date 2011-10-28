@@ -42,11 +42,11 @@ class RPLIdentifier
     @name = name
   end
 
-  def name ;        if command? then @name else @name[1..-1] end end
-  def read? ;       name[0] == "@" end
-  def write? ;      name[0] == "!"  end
+  def name ;        if execute? then @name else @name[1..-1] end end
+  def read? ;       @name[0] == "@" end
+  def write? ;      @name[0] == "!"  end
   def execute? ;    not (read? or write?) end
-  def to_s ;        name end
+  def to_s ;        @name end
 end
 
 # This is the exception class used by commands to report errors.  A RPL error
