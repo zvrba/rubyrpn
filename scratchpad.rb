@@ -7,6 +7,20 @@ require './rpl/sequencer'
 sequencer = RPLSequencer.new
 formats = {}
 
+module RPLArithmetic
+  def RPLArithmetic.extend_object(rpl)
+    rpl.register_op("+", [Numeric, Numeric]) { |a,b| a+b }
+    rpl.register_op("-", [Numeric, Numeric]) { |a,b| a-b }
+    rpl.register_op("*", [Numeric, Numeric]) { |a,b| a*b }
+    rpl.register_op("/", [Numeric, Numeric]) { |a,b| a/b }
+
+    rpl.register_op("neg", [Numeric]) { |x| -x }
+    rpl.register_op("abs", [Numeric]) { |x| x.abs }
+  end
+end
+
+sequencer.extend(RPLArithmetic)
+
 while true
   print "rpl> "
   sequencer.interpret(gets.chomp!)

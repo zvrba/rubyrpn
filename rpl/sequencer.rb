@@ -13,7 +13,11 @@ class RPLSequencer
     @default_formatter = proc { |o| o.inspect }
   end
 
+  #
   # Interpret a complete line.  The input is currenlty ONLY line-based.
+  # TODO:: Make a copy of the stack so that all references to stack pseudo
+  # variables (@1, @2, etc.) are stable.
+  #
   def interpret(input_line)
     parsed_tree = @parser.parse(input_line.chomp)
     @walker.apply(parsed_tree).each { |item| do_item item }
@@ -23,9 +27,11 @@ class RPLSequencer
     @stack << "ERROR: #{$!}"
   end
 
+  #
   # Return an array of strings representing stack items.  formats is a hash
   # that maps a class type (e.g. Integer) to a proc that produces a string
   # from its single argument; if the value is not present, #inspect is called.
+  #
   def format_stack(formats)
     @stack.collect do |obj|
       formatter = formats[obj.class] || @default_formatter
@@ -33,11 +39,13 @@ class RPLSequencer
     end
   end
 
+  #
   # Register an operation with the given name and parameters.  overload is an
   # array of parameter types that are matched against the stack types using
   # kind_of? (which means that superclasses can be used).  The rightmost type
-  # in the array matches the TOP of the stack.
-  # Returns true if the overload was added, false if it was replaced.
+  # in the array matches the TOP of the stack.  Returns true if the overload
+  # was added, false if it was replaced.
+  #
   def register_op(name, overload, &proc)
     @ops[name] = {:overloads => [], :procs => [] } unless @ops[name]
     entry      = @ops[name]
@@ -81,7 +89,15 @@ private
       retval = entry[:procs][overload_i].call(*@stack[-nargs .. -1])
       @stack[-nargs .. -1] = retval
     elsif item.read?
+      v = @vars[item.name] or
+        rpl_fail(item.name, "undefined variable")
+
+      @stack << v
     elsif item.write?
+      rpl.fail(item.name, "empty stack encountered while storing into a variable") unless
+        (v = @stack.pop)
+      
+      @vars[item.name] = v
     else
       fail "Internal error -- unknown variable mode"
     end

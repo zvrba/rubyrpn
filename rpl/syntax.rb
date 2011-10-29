@@ -72,8 +72,8 @@ class RPLAST < Parslet::Transform
 
   rule(:intnum => simple(:x))         { Integer(x) }
   rule(:flonum => simple(:x))         { Float(x) }
-  rule(:var    => simple(:x))         { RPLIdentifier.new(x) }
-  rule(:op     => simple(:x))         { RPLIdentifier.new(x) }
+  rule(:var    => simple(:x))         { RPLIdentifier.new(x.to_s) }
+  rule(:op     => simple(:x))         { RPLIdentifier.new(x.to_s) }
   rule(:vector => sequence(:x))       { Vector[*x] }
   rule(:list   => sequence(:x))       { Array[*x] }
   rule(:matrix => sequence(:x))       { RPLAST.MakeMatrix(*x) }
