@@ -1,7 +1,7 @@
 module RPL
 
   # The main interpreter class.
-  class RPLSequencer
+  class Sequencer
     attr_reader :stack
 
     # No arguments -- creates a "clean slate" interpreter.
@@ -19,7 +19,7 @@ module RPL
     # Returns error string on failure.
     #
     def compile(line)
-      @parser.parse input_line.chomp
+      @walker.apply(@parser.parse line)
     rescue Parslet::ParseFailed
       "PARSE ERROR: #{$!}"
     end

@@ -46,7 +46,7 @@ module RPL
 
     def read? ;       @name[0] == "@" end
     def write? ;      @name[0] == "!"  end
-    def execute? ;    not (read? or write?) end
+    def execute? ;    !(read? || write?) end
   end
 
   #

@@ -23,18 +23,18 @@ end
 
 class Ledit
   def initialize
-    @sequencer = RPL.Sequencer.new
+    @sequencer = RPL::Sequencer.new
     @formats   = {}
     @lasterr   = nil
   end
 
   def main
-    while prompt
-      if (String === (xt = @sequencer.compile $_))
+    while (line = prompt)
+      if (String === (xt = @sequencer.compile(line)))
         @lasterr = xt
         next
       end
-      if (String === (xt = @sequencer.xt xt))
+      if (String === (xt = @sequencer.xt(xt)))
         @lasterr = xt
         next
       end
@@ -56,7 +56,7 @@ class Ledit
       end
     end
     print "\nRPN> "
-    gets
+    gets.chomp!
   end
 
 end
