@@ -37,7 +37,7 @@ module RPL
       if write?
         rpl.defvar(self)
       else
-        d = rpl.symdef(name) or RPL.fail(name, "undefined name")
+        d = rpl.symdef(self) or RPL.fail(name, "undefined name")
         rpl.xt(d)
       end
     end
