@@ -26,6 +26,8 @@ class Ledit
     @sequencer = RPL::Sequencer.new
     @formats   = {}
     @lasterr   = nil
+    
+    @sequencer.extend(RPL::Arithmetic)
   end
 
   def main

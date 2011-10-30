@@ -42,8 +42,6 @@ module RPL
       end
     end
 
-    private
-
     def read? ;       @name[0] == "@" end
     def write? ;      @name[0] == "!"  end
     def execute? ;    !(read? || write?) end
@@ -70,7 +68,8 @@ module RPL
     end
 
     def xt(rpl)
-      @code.call(*@rpl.stack[-@types.length .. -1])
+      v = @code.call(*rpl.stack[-@types.length .. -1])
+      rpl.stack[-@types.length .. -1] = v
     end
   end
 
