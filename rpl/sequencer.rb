@@ -1,111 +1,87 @@
-# require_relative 'syntax'
+module RPL
 
-# The main interpreter class.
-class RPLSequencer
+  # The main interpreter class.
+  class RPLSequencer
+    attr_reader :stack
 
-  # No arguments -- creates a "clean slate" interpreter.
-  def initialize
-    @parser = RPLSyntax.new
-    @walker = RPLAST.new
-    @stack = []
-    @vars = {}
-    @ops = {}
-    @default_formatter = proc { |o| o.inspect }
-  end
-
-  #
-  # Interpret a complete line.  The input is currenlty ONLY line-based.
-  # TODO:: Make a copy of the stack so that all references to stack pseudo
-  # variables (@1, @2, etc.) are stable.
-  #
-  def interpret(input_line)
-    parsed_tree = @parser.parse(input_line.chomp)
-    @walker.apply(parsed_tree).each { |item| do_item item }
-  rescue Parslet::ParseFailed
-    @stack << "PARSE ERROR: #{$!}"
-  rescue RPLException
-    @stack << "ERROR: #{$!}"
-  end
-
-  #
-  # Return an array of strings representing stack items.  formats is a hash
-  # that maps a class type (e.g. Integer) to a proc that produces a string
-  # from its single argument; if the value is not present, #inspect is called.
-  #
-  def format_stack(formats)
-    @stack.collect do |obj|
-      formatter = formats[obj.class] || @default_formatter
-      formatter.call(obj)
+    # No arguments -- creates a "clean slate" interpreter.
+    def initialize
+      @parser = Parser.new
+      @walker = Walker.new
+      @stack = []
+      @vars = {}
+      @ops = {}
+      @default_formatter = proc { |o| o.inspect }
     end
-  end
 
-  #
-  # Register an operation with the given name and parameters.  overload is an
-  # array of parameter types that are matched against the stack types using
-  # kind_of? (which means that superclasses can be used).  The rightmost type
-  # in the array matches the TOP of the stack.  Returns true if the overload
-  # was added, false if it was replaced.
-  #
-  def register_op(name, overload, &proc)
-    @ops[name] = {:overloads => [], :procs => [] } unless @ops[name]
-    entry      = @ops[name]
-    overload_i = entry[:overloads].find_index(overload) || entry[:overloads].length
-    status     = overload_i == entry[:overloads].length
-
-    entry[:overloads][overload_i] = overload
-    entry[:procs][overload_i]     = proc
-    return status
-  end
-
-private
-
-  def find_overload_index(overloads)
-    return overloads.find_index { |o| o.length <= @stack.length and match_overload(o) }
-  end
-
-  def match_overload(o)
-    @stack[-o.length .. -1].map.with_index do |stack_item, index|
-      stack_item.kind_of? o[index]
-    end.all?
-  end
-
-  def do_item(item)
-    if item.instance_of? RPLIdentifier then
-      do_var item
-    else
-      do_value item
+    #
+    # Compile a complete line and return a list of execution tokens (XTs).
+    # Returns error string on failure.
+    #
+    def compile(line)
+      @parser.parse input_line.chomp
+    rescue Parslet::ParseFailed
+      "PARSE ERROR: #{$!}"
     end
-  end
 
-  def do_var(item)
-    if item.execute?
-      entry = @ops[item.name] or
-        rpl_fail(item.name, "undefined operation")
-
-      overload_i = find_overload_index(entry[:overloads]) or
-        rpl_fail(item.name, "no overload found for given arguments")
-
-      nargs  = entry[:overloads][overload_i].length
-      retval = entry[:procs][overload_i].call(*@stack[-nargs .. -1])
-      @stack[-nargs .. -1] = retval
-    elsif item.read?
-      v = @vars[item.name] or
-        rpl_fail(item.name, "undefined variable")
-
-      @stack << v
-    elsif item.write?
-      rpl.fail(item.name, "empty stack encountered while storing into a variable") unless
-        (v = @stack.pop)
-      
-      @vars[item.name] = v
-    else
-      fail "Internal error -- unknown variable mode"
+    #
+    # Execute a single XT or a list of XTs.  Returns error string on failure,
+    # otherwise an unspecified (non-string) type.
+    #
+    def xt(tokens)
+      tokens = [tokens] unless tokens.respond_to? :each
+      tokens.each { |token|
+        if token.respond_to? :xt then token.xt self else @stack << token end
+      }
+      nil
+    rescue ExecutionFailure
+      "EXECUTION ERROR: #{$!}"
     end
+
+    #
+    # Return an array of strings representing stack items.  formats is a hash
+    # that maps a class type (e.g. Integer) to a proc that produces a string
+    # from its single argument; if the value is not present, #inspect is called.
+    #
+    def format_stack(formats)
+      @stack.collect do |obj|
+        formatter = formats[obj.class] || @default_formatter
+        formatter.call(obj)
+      end
+    end
+
+    # Return a definition associated with the given symbol.
+    def symdef(symbol)
+      return symbol.execute? ? @ops[symbol.name] : @vars[symbol.name]
+    end
+
+    # Define a variable with the given name and value popped from TOS.
+    def defvar(symbol)
+      RPL.fail(symbol, "cannot define variable -- empty stack") unless (v = @stack.pop)
+      @vars[symbol.name] = v
+    end
+
+    #
+    # Define an operation with the given name and parameters.  Returns true if
+    # the overload was added, false if it was replaced.
+    #
+    def defop(name, types, &code)
+      @ops[name] = [] unless @ops[name]
+      e = @ops[name]
+      i = e.find_index { |o| types == o.types } || e.length
+      r = i == e.length
+      e[i] = Operator.new(types, code)
+      return r
+    end
+
+    #
+    # Like defop, but vectorizes the operation: if the types is [Numeric],
+    # or [Numeric,Numeric], suitable elementwise overloads are generated.
+    #
+    def defop_v(name, types, &code)
+      fail "TODO -- UNIMPLEMENTED"
+    end
+
   end
 
-  def do_value(item)
-    @stack << item
-  end
-
-end
-
+end     
