@@ -2,32 +2,15 @@
 # Line-oriented interface for RPN calculator.
 #
 
-require './rpl/syntax' # Parslet generates many warnings
-$VERBOSE=true
-require './rpl/helpers'
-require './rpl/sequencer'
-
-module RPL
-  module Arithmetic
-    def Arithmetic.extend_object(rpl)
-      rpl.defop("+", [Numeric, Numeric]) { |a,b| a+b }
-      rpl.defop("-", [Numeric, Numeric]) { |a,b| a-b }
-      rpl.defop("*", [Numeric, Numeric]) { |a,b| a*b }
-      rpl.defop("/", [Numeric, Numeric]) { |a,b| a/b }
-
-      rpl.defop("neg", [Numeric]) { |x| -x }
-      rpl.defop("abs", [Numeric]) { |x| x.abs }
-    end
-  end
-end
+require './rpl/rpl'
 
 class Ledit
   def initialize
     @sequencer = RPL::Sequencer.new
+    RPL::Words.register @sequencer
+
     @formats   = {}
     @lasterr   = nil
-    
-    @sequencer.extend(RPL::Arithmetic)
   end
 
   def main
