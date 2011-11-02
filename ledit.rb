@@ -19,7 +19,9 @@ class Ledit
         @lasterr = xt
         next
       end
-      if (String === (xt = @sequencer.xt(xt)))
+      xt = @sequencer.xt(xt)
+      puts xt
+      if (String === xt)
         @lasterr = xt
         next
       end

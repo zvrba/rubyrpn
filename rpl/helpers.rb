@@ -68,8 +68,12 @@ module RPL
     end
 
     def xt(rpl)
-      v = @code.call(*rpl.stack[-@types.length .. -1])
-      rpl.stack[-@types.length .. -1] = v
+      if not @types.empty?
+        v = @code.call(*rpl.stack[-@types.length .. -1])
+        rpl.stack[-@types.length .. -1] = v
+      else
+        rpl.stack << @code.call
+      end
     end
   end
 

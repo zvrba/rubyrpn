@@ -20,6 +20,8 @@ module RPL
     #
     def compile(line)
       @walker.apply(@parser.parse line)
+    rescue ExecutionFailure
+      "EXECUTION ERROR: #{$!}"
     rescue Parslet::ParseFailed
       "PARSE ERROR: #{$!}"
     end
@@ -33,9 +35,11 @@ module RPL
       tokens.each { |token|
         if token.respond_to? :xt then token.xt self else @stack << token end
       }
-      nil
+      return nil
     rescue ExecutionFailure
-      "EXECUTION ERROR: #{$!}"
+      return "EXECUTION ERROR: #{$!}"
+    rescue Math::DomainError
+      return "DOMAIN ERROR: #{$!}"
     end
 
     #
