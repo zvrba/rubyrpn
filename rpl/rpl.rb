@@ -9,7 +9,7 @@ require_relative 'arwords'
 module RPL
   class Words
     def Words.register(rpl)
-      Words.register_arithmetic rpl
+      rpl.instance_exec &@@arithmetic
     end
   end
 end

@@ -4,17 +4,15 @@
 
 module RPL
   class Words
-    def Words.register_arithmetic(rpl)
-      rpl.instance_exec do
-        defop("+", [Numeric, Numeric]) { |a,b| a+b }
-        defop("-", [Numeric, Numeric]) { |a,b| a-b }
-        defop("*", [Numeric, Numeric]) { |a,b| a*b }
-        defop("/", [Numeric, Numeric]) { |a,b| a/b }
+    @@arithmetic = proc {
+      defop("+", [Numeric, Numeric]) { |a,b| a+b }
+      defop("-", [Numeric, Numeric]) { |a,b| a-b }
+      defop("*", [Numeric, Numeric]) { |a,b| a*b }
+      defop("/", [Numeric, Numeric]) { |a,b| a/b }
         
-        defop("neg", [Numeric]) { |x| -x }
-        defop("abs", [Numeric]) { |x| x.abs }
-      end
-    end
+      defop("neg", [Numeric]) { |x| -x }
+      defop("abs", [Numeric]) { |x| x.abs }
+    }
   end
 end
 
