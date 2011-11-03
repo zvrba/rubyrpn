@@ -5,7 +5,7 @@
 module RPL
 
   # This is class is used by operators to report errors.  
-  class ExecutionFailure < Exception
+  class ExecutionFailure < StandardError
     def initialize(message)
       super(message)
     end
@@ -34,7 +34,15 @@ module RPL
     def to_s ;        name end
 
     def xt(rpl)
-      if write?
+      if execute?
+        d = rpl.symdef(self)
+        raise "INTERNAL ERROR" unless d.kind_of? Array
+
+        i = d.find_index { |o| o.matches? rpl.stack }
+        RPL.fail(name, "cannot find overload") unless i
+
+        d[i].xt rpl
+      elsif write?
         rpl.defvar(self)
       else
         d = rpl.symdef(self) or RPL.fail(name, "undefined name")
@@ -60,19 +68,34 @@ module RPL
 
     # Test whether the topmost stack elements match the operator's types.  The
     # test is performed by using #kind_of?, and the LAST item in the list is
-    # matched against the TOP stack element.
+    # matched against the TOP stack element.  Argument list given to
+    # Sequencer::defop can have several formats:
+    #
+    # empty, i.e., +[]+:: The function doesn't take any arguments and returns
+    #   a result
+    # an array of parameter types, e.g., [Vector,Integer]:: The function takes
+    #   Vector (as first argument; just below top of stack) and Integer (as
+    #   second argument; top of stack)
+    # nil:: The function receives the complete stack as the single argument.
+    #   The TOS is the last element.
     def matches?(stack)
+      return true if (@types.nil? || @types.empty?)
       d = @types.length
-      (@types.length <= d) and
+      (stack.length >= d) &&
         (stack[-d .. -1].map.with_index { |v,i| v.kind_of? @types[i] }.all?)
     end
 
+    # Execute the associated code.  When the argument list is non-nil and non-empty,
+    # the appropriate number of arguments are popped of the stack and replaced with
+    # the result (which may be nil, in which case no elements are created).
     def xt(rpl)
-      if not @types.empty?
-        v = @code.call(*rpl.stack[-@types.length .. -1])
-        rpl.stack[-@types.length .. -1] = v
-      else
+      if @types.nil?
+        @code.call(rpl.stack)
+      elsif @types.empty?
         rpl.stack << @code.call
+      else
+        v = @code.call(*rpl.stack[-@types.length .. -1])
+        rpl.stack[-@types.length .. -1] = *v
       end
     end
   end

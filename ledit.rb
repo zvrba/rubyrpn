@@ -15,22 +15,18 @@ class Ledit
 
   def main
     while (line = prompt)
-      if (String === (xt = @sequencer.compile(line)))
-        @lasterr = xt
-        next
-      end
-      xt = @sequencer.xt(xt)
-      puts xt
-      if (String === xt)
-        @lasterr = xt
-        next
+      begin
+        xt = @sequencer.compile(line)
+        @sequencer.xt xt
+      rescue
+        @lasterr = "#{$!.to_s} [#{$!.class}]"
       end
     end
   end
 
   def prompt
     if @lasterr
-      STDERR.puts @lasterr
+      STDERR.puts "ERROR: #{@lasterr}"
       @lasterr = nil
     else
       formatted_stack = @sequencer.format_stack @formats

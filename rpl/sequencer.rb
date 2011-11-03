@@ -20,26 +20,16 @@ module RPL
     #
     def compile(line)
       @walker.apply(@parser.parse line)
-    rescue ExecutionFailure
-      "EXECUTION ERROR: #{$!}"
-    rescue Parslet::ParseFailed
-      "PARSE ERROR: #{$!}"
     end
 
     #
-    # Execute a single XT or a list of XTs.  Returns error string on failure,
-    # otherwise an unspecified (non-string) type.
+    # Execute a single XT or a list of XTs.
     #
     def xt(tokens)
       tokens = [tokens] unless tokens.respond_to? :each
       tokens.each { |token|
         if token.respond_to? :xt then token.xt self else @stack << token end
       }
-      return nil
-    rescue ExecutionFailure
-      return "EXECUTION ERROR: #{$!}"
-    rescue Math::DomainError
-      return "DOMAIN ERROR: #{$!}"
     end
 
     #
@@ -60,9 +50,9 @@ module RPL
     end
 
     #
-    # Define a variable with the given name and value.  If value is nil, it is
-    # popped from the stack.
-    def defvar(symbol, v)
+    # Define a variable with the value taken from top of the stack.
+    #
+    def defvar(symbol)
       RPL.fail(symbol, "cannot define variable -- empty stack") unless
         (v ||= @stack.pop)
       @vars[symbol.name] = v
@@ -70,19 +60,15 @@ module RPL
 
     #
     # Define an operation with the given name and parameters.  If parameters
-    # is nil, anything is accepted.  Returns true if the overload was added,
-    # false if it was replaced.
+    # is nil, anything is accepted.
     #
     def defop(name, types, &code)
       @ops[name] = [] unless @ops[name]
       e = @ops[name]
       i = e.find_index { |o| types == o.types } || e.length
-      r = i == e.length
+      STDERR.puts "WARNING: redefining #{name} for #{types}" if i < e.length
       e[i] = Operator.new(types, code)
-      return r
     end
-
-
   end
 
-end     
+end
