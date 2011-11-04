@@ -55,13 +55,8 @@ This will be amended later.
 
 Identifiers
 -----------
-There are three kinds of identifiers: those "escaped" with @ or ! and
-unescaped, e.g.: 1) @var, 2) !var, 3) var.  Case 1 looks up the value
-of 'var' and pushes it onto the stack.  Case 2 pops an element from
-the stack and stores into 'var'.  Case 3 looks up the command named
-'var' and executes it.  Note that commands and variables live in
-different namespaces: since variable names have mandatory prefix,
-they cannot be confused with commands of the same name.
+Commands and variables live in the same namespace.  The system won't allow
+redefining a command; only new overloads can be added.
 
 Error handling
 --------------

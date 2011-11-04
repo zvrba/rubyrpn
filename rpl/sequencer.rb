@@ -2,15 +2,14 @@ module RPL
 
   # The main interpreter class.
   class Sequencer
-    attr_reader :stack
+    attr_reader :stack, :names
 
     # No arguments -- creates a "clean slate" interpreter.
     def initialize
       @parser = Parser.new
       @walker = Walker.new
-      @stack = []
-      @vars = {}
-      @ops = {}
+      @stack  = []
+      @names  = {}
       @default_formatter = proc { |o| o.inspect }
     end
 
@@ -22,9 +21,7 @@ module RPL
       @walker.apply(@parser.parse line)
     end
 
-    #
     # Execute a single XT or a list of XTs.
-    #
     def xt(tokens)
       tokens = [tokens] unless tokens.respond_to? :each
       tokens.each { |token|
@@ -44,30 +41,10 @@ module RPL
       end
     end
 
-    # Return a definition associated with the given symbol.
-    def symdef(symbol)
-      return symbol.execute? ? @ops[symbol.name] : @vars[symbol.name]
-    end
-
-    #
-    # Define a variable with the value taken from top of the stack.
-    #
-    def defvar(symbol)
-      RPL.fail(symbol, "cannot define variable -- empty stack") unless
-        (v ||= @stack.pop)
-      @vars[symbol.name] = v
-    end
-
-    #
-    # Define an operation with the given name and parameters.  If parameters
-    # is nil, anything is accepted.
-    #
+    # Define an operation with the given name and parameters.
     def defop(name, types, &code)
-      @ops[name] = [] unless @ops[name]
-      e = @ops[name]
-      i = e.find_index { |o| types == o.types } || e.length
-      STDERR.puts "WARNING: redefining #{name} for #{types}" if i < e.length
-      e[i] = Operator.new(types, code)
+      @names[name] ||= Word.new(name)
+      @names[name].defop(types, code)
     end
   end
 

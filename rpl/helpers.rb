@@ -11,54 +11,39 @@ module RPL
     end
   end
 
-  #
   # Raise ExecutionFailure with an appropriatelly formatted error message.
   # The error message consists of two parts: a cause (command/input string
   # that causet the error) and a message which explains the condition in more
   # detail.
-  #
   def RPL.fail(cause, message)
     raise ExecutionFailure, "#{message} -- #{cause.to_s}"
   end
 
-  #
-  # A symbol can denote either a read/write from a variable (@/! prefix), or
-  # an executable command (no prefix).
-  #
-  class Symbol
+  # A name is either:
+  # read:: In which case, its value is fetched and executed
+  # written:: When the first character is exclamation.
+  class Name
     def initialize(name)
       @name = name
     end
-    
-    def name ;        if execute? then @name else @name[1..-1] end end
-    def to_s ;        name end
+
+    def name ; @name[0] == "!" ? @name[1..-1] : @name end
+    def to_s ; @name end
 
     def xt(rpl)
-      if execute?
-        d = rpl.symdef(self)
-        raise "INTERNAL ERROR" unless d.kind_of? Array
-
-        i = d.find_index { |o| o.matches? rpl.stack }
-        RPL.fail(name, "cannot find overload") unless i
-
-        d[i].xt rpl
-      elsif write?
-        rpl.defvar(self)
+      if @name[0] == "!"
+        RPL.fail(@name, "cannot redefine word") if rpl.names[name].kind_of? Word
+        v = rpl.stack.pop || RPL.fail(@name, "empty stack")
+        rpl.names[name] = v
       else
-        d = rpl.symdef(self) or RPL.fail(name, "undefined name")
-        rpl.xt(d)
+        d = rpl.names[@name] || RPL.fail(name, "undefined name")
+        if d.respond_to? :xt then d.xt rpl else rpl.stack << d end
       end
     end
-
-    def read? ;       @name[0] == "@" end
-    def write? ;      @name[0] == "!"  end
-    def execute? ;    !(read? || write?) end
   end
 
-  #
-  # An operator associates argument types with some code.
-  #
-  class Operator
+  # An overload associates a list of argument types with code.
+  class Overload
     attr_reader :types, :code
 
     def initialize(t, c)
@@ -88,15 +73,35 @@ module RPL
     # Execute the associated code.  When the argument list is non-nil and non-empty,
     # the appropriate number of arguments are popped of the stack and replaced with
     # the result (which may be nil, in which case no elements are created).
-    def xt(rpl)
+    def xt(stack)
       if @types.nil?
-        @code.call(rpl.stack)
+        @code.call(stack)
       elsif @types.empty?
-        rpl.stack << @code.call
+        stack << @code.call
       else
-        v = @code.call(*rpl.stack[-@types.length .. -1])
-        rpl.stack[-@types.length .. -1] = *v
+        v = @code.call(*stack[-@types.length .. -1])
+        stack[-@types.length .. -1] = *v
       end
+    end
+  end
+
+  # This is the object stored in the sequencer's dictionary.
+  class Word
+    def initialize(name)
+      @name = name
+      @overloads = []
+    end
+
+    def defop(types, code)
+      i = @overloads.find_index { |o| o.types == types } || @overloads.length
+      STDERR.puts "WARNING: redefining #{@name} for #{types}" if i < @overloads.length
+      @overloads[i] = Overload.new(types, code)
+    end
+
+    def xt(rpl)
+      i = @overloads.find_index { |o| o.matches? rpl.stack } ||
+        RPL.fail(@name, "cannot find overload for stack arguments")
+      @overloads[i].xt rpl.stack
     end
   end
 

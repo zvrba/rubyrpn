@@ -46,8 +46,8 @@ module RPL
 
     rule(:intnum => simple(:x))         { Integer(x) }
     rule(:flonum => simple(:x))         { Float(x) }
-    rule(:var    => simple(:x))         { Symbol.new(x.to_s) }
-    rule(:op     => simple(:x))         { Symbol.new(x.to_s) }
+    rule(:var    => simple(:x))         { Name.new(x.to_s) }
+    rule(:op     => simple(:x))         { Name.new(x.to_s) }
     rule(:vector => sequence(:x))       { Vector[*x] }
     rule(:list   => sequence(:x))       { Array[*x] }
     rule(:matrix => sequence(:x))       { Walker.MakeMatrix(*x) }
