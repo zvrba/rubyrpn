@@ -21,26 +21,35 @@ module RPL
     def Words.register_misc_dict rpl
       rpl.instance_exec do
 
-        # NB! Not transactional!
-        defop("!", [Array]) { |varlist|
-          RPL.fail("!", "stack underflow") unless @stack.length >= varlist.length
+        defop("!", [Array]) { |varlist|            # NB! NOT TRANSACTIONAL!  
+          RPL.fail("!", "stack underflow") unless
+            @stack.length >= varlist.length
           varlist.reverse.each { |name| defvar(name, @stack.pop) }
           nil
         }
 
-        # NB! Not transactional!
-        defop("purge", [Array]) { |varlist|
+        defop("purge", [Array]) { |varlist|        # NB! NOT TRANSACTIONAL!
           varlist.each { |name| rmvar name }
           nil
         }
 
-        # "thread"
+        # ~ as a mnemonic for "threading": returning an array prevents
+        # elementwise splicing of vector elements into the stack.
+        # NB! Most-specific (largest arity) overloads must come first!
+
+        defop("~", [Vector,Vector,Array]) { |v1,v2,a|
+          [Vector[ # #collect2 returns an array?!
+                  *(v1.collect2(v2) { |e1,e2| @stack.push(e1,e2); xt(a); @stack.pop })
+                 ]]
+        }
         defop("~", [Vector,Numeric,Array]) { |v,n,a|
-          v.map { |e|
-            @stack.push(e,n)
-            xt(a)
-            @stack.pop
-          }
+          [v.collect { |e| @stack.push(e,n); xt(a); @stack.pop }]
+        }
+        defop("~", [Numeric,Vector,Array]) { |n,v,a|
+          [v.collect { |e| @stack.push(e,n); xt(a); @stack.pop }]
+        }
+        defop("~", [Vector,Array]) { |v,a|
+          [v.collect { |e| @stack.push(e); xt(a); @stack.pop }]
         }
 
       end
