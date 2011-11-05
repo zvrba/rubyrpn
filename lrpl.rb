@@ -32,7 +32,7 @@ class Ledit
     else
       formatted_stack = @sequencer.format_stack @formats
       if formatted_stack.empty?
-        puts "EMPTY STACK"
+        puts "--EMPTY STACK--"
       else
         formatted_stack.each.with_index do |item, i|
           puts sprintf("%03d: %s", formatted_stack.length-i, item)

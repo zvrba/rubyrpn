@@ -1,0 +1,116 @@
+.\" lrpl
+.Dd November 05, 2011
+.Os Ruby 1.9.2
+.Dt lrpl
+.Sh Ruby RPL implementation
+.Nm lrpl
+.Nd RPL interactive shell
+.Sh SYNOPSIS
+.Fd lrpl
+.Sh DESCRIPTION
+This program consists of a Ruby library implementing the RPL language and a
+basic interactive shell (
+.Nm ) ,
+with the goal of providing a user experience
+.Em similar
+to that of HP-28 calculator series.  This manual describes features of this
+particular RPL implementation, as well as features of the
+.Nm
+interactive shell.  This is a
+.Em reference manual only
+and assumes that the reader is acquainted with the philosophy behind RPN.  For
+tutorials and introductions, as well as differences from existing
+implementations, see references at the end.
+.Sh LANGUAGE
+The languages follows the fundamental RPL philosophy: there is a global stack
+that is used for giving arguments to functions, as well as receiving the
+results.  Apart from being on stack, values may be also stored into and
+recalled from named variables.  Function and variable names occupy the same
+namespace, but the interpreter will not allow a function definition to be
+replaced with a data value.
+.Pp
+As in RPL, functions are
+.Em polymorphic:
+the number and type of stack arguments determine the function's behavior.
+.Pp
+Also, values may be stored into and recalled from named variables.  Function
+names and variable names live in the same namespace, but the interpreter will
+not allow overwriting definitions of already existing functions; if this is
+attempted, an error will be signaled.  By convention, all system-defined names
+begin with a lower-case letter or a special symbol.  Thus, using capitalized
+variable names will ensure that there won't occur any clashes with already
+existing names.
+.Pp
+The
+.Em major difference
+from RPL is that this implementation does not support programmability "from
+within": all new functions must be defined as Ruby code.
+.Ss Data types
+.Nm
+supports the following data types: integer and floating-point numbers, lists,
+vectors, matrices and names.
+.Bl -hang
+.It Integer numbers
+are signed and of unlimited precision. They may be entered in decimal
+(optionally with leading minus sign), hexadecimal (with
+.Li 0x )
+prefix,
+binary (with
+.Li 0b )
+prefix, or octal (with
+.Li 0 )
+prefix. Binary and hexadecimal numbers cannot have a leading sign.
+.Sy Warning :
+Octal numbers are accepted accidentally. They may be removed in a future release.
+.It Floating-point numbers
+are accepted in the usual syntax,  including scientific
+notation.  Note that the fractional part is
+.Em required
+for the number to be recognized as floating-point.  For example, you must write
+.Li 3.0
+and
+.Li 3.0e-4
+instead of
+.Li 3
+and
+.Li 3e-4 .
+.It Lists
+are heterogeneous collections of different objects delimited by
+.Li {} ,
+for example:
+.Li { 1 2 a }\&
+\&.
+Unlike vectors and matrices, which can contain only numbers, lists can contain
+also
+.Em unevaluated
+names.  Lists serve thus also as a quoting mechanism: wrapping a name into a list
+will prevent its immediate evaluation.  This mechanism, combined with the
+.Li eval
+word, can be used to make simple sequences of commands (macros), store them
+into variables, and recall and execute them on demand.
+.Sy Note :
+In current implementation, lists cannot be nested and can conatin only numbers
+and names.  This restriction will be removed later on.
+.It Vectors
+are collections of numbers delimited by
+.Li [] ,
+with individual elements delimited by spaces, e.g.:
+.Li [ 1 2 ] .
+.It Matrices
+are entered as vectors of vectrors.  For example, a 2x3 matrix is
+entered as
+.Li [[1 2 3] [4 5 6]] .
+If the rows have unequal lengths, an error will be reported.
+.It Names
+may be constructed from all alphanumeric and some punctuation characters.  A
+name can refer to a function or a data object (one of the types listed above).
+Unless placed in a list, names are automatically looked up and their contents
+evaluated. RPL code may store only data objects into variables; new functions
+can be defined only in Ruby.
+.El
+.Ss Function reference
+.Sh THE lrpl CLIENT PROGRAM
+.Sh IMPLEMENTATION NOTES
+.Sh REFERENCES
+.Sh AUTHORS
+.An Zeljko Vrba
