@@ -36,7 +36,6 @@ module RPL
     end
 
     def xt(rpl)
-      puts "H:`#{@name}'=#{rpl.names[@name]}"
       d = rpl.names[@name] || RPL.fail(@name, "undefined name")
       if d.respond_to? :xt then d.xt rpl else rpl.stack << d end
     end

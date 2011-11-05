@@ -29,11 +29,9 @@ module RPL
       }
     end
 
-    #
     # Return an array of strings representing stack items.  formats is a hash
     # that maps a class type (e.g. Integer) to a proc that produces a string
     # from its single argument; if the value is not present, #inspect is called.
-    #
     def format_stack(formats)
       @stack.collect do |obj|
         formatter = formats[obj.class] || @default_formatter
@@ -41,11 +39,31 @@ module RPL
       end
     end
 
+private
+
     # Define an operation with the given name and parameters.
     def defop(name, types, &code)
+      RPL.fail("defop #{name}", "invalid type") unless
+        (name.is_a? String or name.nil?)
       @names[name] ||= Word.new(name)
       @names[name].defop(types, code)
     end
+
+    # Make a variable definition
+    def defvar(name, val)
+      RPL.fail("defvar #{name}", "invalid type") unless name.is_a? Name
+      RPL.fail("defvar #{name}", "can't redefine words") if @names[name.name].is_a? Word
+      RPL.fail("defvar #{name}", "missing/invalid value") unless val
+      @names[name.name] = val
+    end
+
+    # Remove a variable definition.
+    def rmvar(name)
+      RPL.fail("rmvar #{name}", "invalid type") unless name.is_a? Name
+      RPL.fail("rmvar #{name}", "can't remove words") if @names[name.name].is_a? Word
+      @names.delete name.name
+    end
+
   end
 
 end
