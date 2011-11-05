@@ -21,6 +21,7 @@ module RPL
     def Words.register_misc_dict rpl
       rpl.instance_exec do
 
+        # Store values into variables
         defop("!", [Array]) { |varlist|            # NB! NOT TRANSACTIONAL!  
           RPL.fail("!", "stack underflow") unless
             @stack.length >= varlist.length
@@ -28,6 +29,7 @@ module RPL
           nil
         }
 
+        # Purge variables
         defop("purge", [Array]) { |varlist|        # NB! NOT TRANSACTIONAL!
           varlist.each { |name| rmvar name }
           nil
@@ -38,9 +40,7 @@ module RPL
         # NB! Most-specific (largest arity) overloads must come first!
 
         defop("~", [Vector,Vector,Array]) { |v1,v2,a|
-          [Vector[ # #collect2 returns an array?!
-                  *(v1.collect2(v2) { |e1,e2| @stack.push(e1,e2); xt(a); @stack.pop })
-                 ]]
+          [v1.map2(v2) { |e1,e2| @stack.push(e1,e2); xt(a); @stack.pop }]
         }
         defop("~", [Vector,Numeric,Array]) { |v,n,a|
           [v.collect { |e| @stack.push(e,n); xt(a); @stack.pop }]
