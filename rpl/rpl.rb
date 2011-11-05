@@ -11,8 +11,9 @@ require_relative 'numwords'
 module RPL
   class Words
     def Words.register(rpl)
-      rpl.instance_exec &@@numbers_dict
-      rpl.instance_exec &@@stack_dict
+      Words.register_numbers_dict rpl
+      Words.register_stack_dict rpl
+      Words.register_misc_dict rpl
     end
   end
 end

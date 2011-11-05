@@ -19,12 +19,10 @@ module RPL
     rule (:floatexp) { match('[eE]') >> decint }
     rule (:flonum)   { decint >> match('[.]') >> decnat >> floatexp.maybe }
 
-    # Lexical atoms -- :flonum, :intnum, :var, :op
+    # Lexical atoms -- :flonum, :intnum, :name, :op
     rule (:number)   { (flonum.as(:flonum) | intnum.as(:intnum)) }
-    rule (:varname)  { match('[a-zA-Z0-9_]').repeat(1) }
-    rule (:var)      { (match("[@!']") >> varname).as(:var) }
-    rule (:op)       { (match('[0-9+*/a-zA-Z!@$%^&=|~<>?-]').repeat(1)).as(:op) }
-    rule (:atom)     { number | var | op }
+    rule (:name)     { match('[0-9+*/a-zA-Z!@$%^&=|~<>?:;-]').repeat(1).as(:name) }
+    rule (:atom)     { number | name }
 
     # Composites -- vector, matrix, list
     rule (:vector)   { match('\[') >> ws >> (number >> ws).repeat(1).as(:vector) >> match('\]') }
@@ -46,8 +44,7 @@ module RPL
 
     rule(:intnum => simple(:x))         { Integer(x) }
     rule(:flonum => simple(:x))         { Float(x) }
-    rule(:var    => simple(:x))         { Name.new(x.to_s) }
-    rule(:op     => simple(:x))         { Name.new(x.to_s) }
+    rule(:name   => simple(:x))         { Name.new(x.to_s) }
     rule(:vector => sequence(:x))       { Vector[*x] }
     rule(:list   => sequence(:x))       { Array[*x] }
     rule(:matrix => sequence(:x))       { Walker.MakeMatrix(*x) }

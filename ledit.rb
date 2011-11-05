@@ -20,6 +20,7 @@ class Ledit
         @sequencer.xt xt
       rescue
         @lasterr = "#{$!.to_s} [#{$!.class}]"
+        #raise
       end
     end
   end

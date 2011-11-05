@@ -27,18 +27,18 @@ module RPL
       @name = name
     end
 
-    def name ; @name[0] == "!" ? @name[1..-1] : @name end
-    def to_s ; @name end
+    def name
+      @name
+    end
+
+    def to_s
+      "'#{@name}"
+    end
 
     def xt(rpl)
-      if @name[0] == "!"
-        RPL.fail(@name, "cannot redefine word") if rpl.names[name].kind_of? Word
-        v = rpl.stack.pop || RPL.fail(@name, "empty stack")
-        rpl.names[name] = v
-      else
-        d = rpl.names[@name] || RPL.fail(name, "undefined name")
-        if d.respond_to? :xt then d.xt rpl else rpl.stack << d end
-      end
+      puts "H:`#{@name}'=#{rpl.names[@name]}"
+      d = rpl.names[@name] || RPL.fail(@name, "undefined name")
+      if d.respond_to? :xt then d.xt rpl else rpl.stack << d end
     end
   end
 
@@ -72,15 +72,17 @@ module RPL
 
     # Execute the associated code.  When the argument list is non-nil and non-empty,
     # the appropriate number of arguments are popped of the stack and replaced with
-    # the result (which may be nil, in which case no elements are created).
+    # the result (which may be nil, in which case no elements are created).  The
+    # arguments are popped off BEFORE the code is called, so it is possible to make
+    # varargs commands.
     def xt(stack)
       if @types.nil?
         @code.call(stack)
       elsif @types.empty?
         stack << @code.call
       else
-        v = @code.call(*stack[-@types.length .. -1])
-        stack[-@types.length .. -1] = *v
+        v = @code.call(*stack.pop(@types.length))
+        stack.push(*v)
       end
     end
   end
