@@ -21,6 +21,10 @@ module RPL
     def Words.register_misc_dict rpl
       rpl.instance_exec do
 
+        defop("eval", [Object]) { |o|
+          xt(o); nil
+        }
+
         # Store values into variables
         defop("!", [Array]) { |varlist|            # NB! NOT TRANSACTIONAL!  
           RPL.fail("!", "stack underflow") unless
