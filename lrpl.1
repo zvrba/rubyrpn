@@ -149,6 +149,26 @@ the stack or a name refers to a function.
 .Li purge
 takes a list of names and removes definition of each variable.  An error is reported
 if a variable does not exist or refers to a function.
+.It Matrix and vector algebra
+.Li +, -, *
+are defined for all meaningful combinations of vectors, matrices and scalars.
+.Pp
+.Li /
+can be used to divide a vector with a number, as well as to solve linear systems:
+\&"dividing" a vector by a matrix computes the matrix inverse and multiplies it
+with the vector.
+.Li dot, cross
+compute dot and cross products.  The latter is defined only for 3-D vectors.
+.Pp
+.Li det, inv, trn 
+compute matrix determinant, inverse, and transpose.
+.Pp
+.Li idn
+takes a numeric argument N and constructs an NxN identity matrix.
+.Pp
+.Li diag->
+takes a vector and creates a diagonal matrix with the vector elements on the
+diagonal.
 .It Collective functions
 .Li ~ (
 mnemonic: thread) applies a unary or binary operation elementwise on any combination

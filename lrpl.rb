@@ -16,11 +16,13 @@ class Ledit
   def main
     while (line = prompt)
       begin
+        oldstack = @sequencer.stack.clone
         xt = @sequencer.compile(line)
         @sequencer.xt xt
       rescue
         @lasterr = "#{$!.to_s} [#{$!.class}]"
-        raise
+        @sequencer.stack[0..-1] = oldstack
+        #raise
       end
     end
   end
@@ -40,7 +42,7 @@ class Ledit
       end
     end
     print "\nRPN> "
-    gets.chomp!
+    $_.chomp! if gets
   end
 
 end

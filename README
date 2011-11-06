@@ -24,49 +24,9 @@ WARNING!
 ========
 
 This program is in the development stage.  Do not expect it to be useful out
-of the box!  If you would like to contribute, please contact me.
+of the box!  If you would like to contribute, please contact me.  The manpage
+(lrpl.1) contains the most up-to-date information about this implementation.
 
-Description
-===========
-
-This is a simple programmable RPN calculator written in Ruby.  Users of HP's
-calculators will (hopefully :)) feel at home.  The calculator is planned to
-support integers, floats, vectors, 2D matrices, lists and variables.
-
-Errors are reported by pushing error messages onto the stack.  Since there is
-no string handling, they cannot be mixed up with anything else.
-
-New functions must be implemented in Ruby: developing a full-fledged (User)
-interpreter is very time-consuming.  I also deem it as unnecessary as RPL is
-a rather user-unfriendly language.
-
-Features
-========
-
-Types
------
-Instances of the following ruby classes may be encountered on the RPL stack:
-Integer, Float, Vector, Matrix, Array, String.  Arrays implement lists, and
-strings are used to report errors -- i.e., there are no commands for string
-handling!
-
-Currently, lists cannot be nested and don't offer any useful functionality.
-This will be amended later.
-
-Identifiers
------------
-Commands and variables live in the same namespace.  The system won't allow
-redefining a command; only new overloads can be added.
-
-Error handling
---------------
-Errors are reported by pushing special objects on top of the stack.  The rest
-of the evaluation is immediatelly abandoned.
-
-Programmability
----------------
-All user-defined functions must be implemented in Ruby.  The extension
-mechanism will be documented later.
 
 Interesting links
 =================
