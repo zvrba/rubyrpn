@@ -19,7 +19,7 @@ particular RPL implementation, as well as features of the
 interactive shell.  This is a
 .Em reference manual only
 and assumes that the reader is acquainted with the philosophy behind RPN.  For
-tutorials and introductions, as well as differences from existing
+tutorials and introductions, as well as comparisons with existing
 implementations, see references at the end.
 .Sh LANGUAGE
 The languages follows the fundamental RPL philosophy: there is a global stack
@@ -43,8 +43,8 @@ existing names.
 .Pp
 The
 .Em major difference
-from RPL is that this implementation does not support programmability "from
-within": all new functions must be defined as Ruby code.
+from RPL is that this implementation does not support general programmability
+"from within": all new functions must be defined as Ruby code.
 .Ss Data types
 .Nm
 supports the following data types: integer and floating-point numbers, lists,
@@ -60,6 +60,7 @@ binary (with
 prefix, or octal (with
 .Li 0 )
 prefix. Binary and hexadecimal numbers cannot have a leading sign.
+.Pp
 .Sy Warning :
 Octal numbers are accepted accidentally. They may be removed in a future release.
 .It Floating-point numbers
@@ -78,8 +79,7 @@ and
 are heterogeneous collections of different objects delimited by
 .Li {} ,
 for example:
-.Li { 1 2 a }\&
-\&.
+.Dl { 1 2 a }
 Unlike vectors and matrices, which can contain only numbers, lists can contain
 also
 .Em unevaluated
@@ -88,18 +88,23 @@ will prevent its immediate evaluation.  This mechanism, combined with the
 .Li eval
 word, can be used to make simple sequences of commands (macros), store them
 into variables, and recall and execute them on demand.
+.Pp
 .Sy Note :
 In current implementation, lists cannot be nested and can conatin only numbers
 and names.  This restriction will be removed later on.
 .It Vectors
-are collections of numbers delimited by
+are collections of elements delimited by
 .Li [] ,
 with individual elements delimited by spaces, e.g.:
-.Li [ 1 2 ] .
+.Dl [ 1 2 ]
+.Pp
+.Sy Note :
+Due to Ruby's implementation of vectors, they can contain elements other than
+numbers. Currently, the parser allows only numbers.
 .It Matrices
 are entered as vectors of vectrors.  For example, a 2x3 matrix is
 entered as
-.Li [[1 2 3] [4 5 6]] .
+.Dl [[1 2 3] [4 5 6]]
 If the rows have unequal lengths, an error will be reported.
 .It Names
 may be constructed from all alphanumeric and some punctuation characters.  A
@@ -109,6 +114,50 @@ evaluated. RPL code may store only data objects into variables; new functions
 can be defined only in Ruby.
 .El
 .Ss Function reference
+This section lists currently implemented functions by group.  Where reasonable,
+functions are overloaded with their established meanings, e.g.,
+.Li + ,
+can add numbers (any combination of integers and floating-point), as well as
+vectors and matrices of equal dimensions.
+.Bl -tag
+.It Constants
+.Li PI, E
+.It Arithmetic and transcedental functions
+.Li +, -, *, /, %, pow, mod, neg, abs, inv, floor, ceil, trunc, r>d
+(radians to degrees),
+.Li d>r
+(degrees to radians),
+all unary and binary functions from the
+.Li Math
+module.
+.It Relational operators
+.Li <, <=, >, >=, <>, ==
+.Pp
+.Sy Note :
+These operators return Boolean flags (true/false), which cannot be used by any
+other functions at the moment.
+.It Stack manipulation
+.Li drop, dup, over, swap, rot, unrot, clear, eval
+.It Variable manipulation
+.Li !
+takes a list of names and pops stack elements storing each into the corresponding
+variable named in the list. Top of stack is stored into the
+.Em last
+variable. An error will be reported if there is insufficient number of elements on
+the stack or a name refers to a function.
+.Pp
+.Li purge
+takes a list of names and removes definition of each variable.  An error is reported
+if a variable does not exist or refers to a function.
+.It Collective functions
+.Li ~ (
+mnemonic: thread) applies a unary or binary operation elementwise on any combination
+of vectors and numbers.  For example, the following subtracts 10 from each element
+of a vector:
+.Dl [1 2 3] { 10 - } ~
+resulting in
+.Dl [-9 -8 -7]
+.El
 .Sh THE lrpl CLIENT PROGRAM
 .Sh IMPLEMENTATION NOTES
 .Sh REFERENCES

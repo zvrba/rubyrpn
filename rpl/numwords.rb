@@ -16,6 +16,7 @@ module RPL
         defop("*",   [Numeric, Numeric]) { |a,b| a*b }
         defop("/",   [Numeric, Numeric]) { |a,b| a/b }
         defop("pow", [Numeric, Numeric]) { |a,b| a**b }
+        defop("mod", [Numeric, Numeric]) { |a,b| a%b }
 
         # Relational ops
         defop("<",  [Numeric, Numeric]) { |a,b| a<b }
@@ -29,6 +30,7 @@ module RPL
         defop("neg",   [Numeric]) { |x| -x }
         defop("abs",   [Numeric]) { |x| x.abs }
         defop("inv",   [Numeric]) { |x| 1.0 / x }
+        defop("sq",    [Numeric]) { |x| x*x }
         defop("floor", [Numeric]) { |x| x.floor }
         defop("ceil",  [Numeric]) { |x| x.ceil }
         defop("trunc", [Numeric]) { |x| x.truncate }
