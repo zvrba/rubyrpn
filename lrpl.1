@@ -8,48 +8,54 @@
 .Sh SYNOPSIS
 .Fd lrpl
 .Sh DESCRIPTION
-This program consists of a Ruby library implementing the RPL language and a
-basic interactive shell (
-.Nm ) ,
-with the goal of providing a user experience
-.Em similar
-to that of HP-28 calculator series.  This manual describes features of this
-particular RPL implementation, as well as features of the
+This RPL implementation consists of two parts:
+.Bl -bullet
+.It
+An extensible library implementing the core RPL data-types and operators, and
+.It
+A text-based shell,
+.Nm ,
+intended to give the user the experience similar to that of using a HP-28
+calculator.
+.El
+.Pp
+This is
+.Em only
+a reference manual and assumes that the reader is well acquainted with the
+philosophy behind RPN.  The following sections describe the particulars of
+this RPL implementation (contained in the
+.Li RPL
+module), features of the
 .Nm
-interactive shell.  This is a
-.Em reference manual only
-and assumes that the reader is acquainted with the philosophy behind RPN.  For
-tutorials and introductions, as well as comparisons with existing
-implementations, see references at the end.
+interactive shell, and gives pointers to introductions and tutorials about the
+RPN notation and the RPL language.
 .Sh LANGUAGE
-The languages follows the fundamental RPL philosophy: there is a global stack
-that is used for giving arguments to functions, as well as receiving the
-results.  Apart from being on stack, values may be also stored into and
-recalled from named variables.  Function and variable names occupy the same
-namespace, but the interpreter will not allow a function definition to be
-replaced with a data value.
+The implementation follows the fundamental RPL philosophy: there are a variety
+of data-types, a (global) stack holding values, named variables, and operators
+that are overloadable by the number and type of arguments.
 .Pp
-As in RPL, functions are
-.Em polymorphic:
-the number and type of stack arguments determine the function's behavior.
-.Pp
-Also, values may be stored into and recalled from named variables.  Function
-names and variable names live in the same namespace, but the interpreter will
-not allow overwriting definitions of already existing functions; if this is
-attempted, an error will be signaled.  By convention, all system-defined names
+As in RPL, operators and variables live in the same namespace, but the
+implementation, will
+.Em not
+allow redefinitions of operators; only new overloads may be added.  By
+convention, all system-defined names, with the exception of
+.Li E
+and
+.Li PI ,
 begin with a lower-case letter or a special symbol.  Thus, using capitalized
 variable names will ensure that there won't occur any clashes with already
 existing names.
 .Pp
 The
 .Em major difference
-from RPL is that this implementation does not support general programmability
-"from within": all new functions must be defined as Ruby code.
+from other RPL implementations is that general programmability "from within"
+is not supported: new functions and data-types must be defined by extending
+existing Ruby code.
+.Pp
+The following two subsections describe currently implemented data-types and
+operators.
 .Ss Data types
-.Nm
-supports the following data types: integer and floating-point numbers, lists,
-vectors, matrices and names.
-.Bl -hang
+.Bl -hang -width "AB"
 .It Integer numbers
 are signed and of unlimited precision. They may be entered in decimal
 (optionally with leading minus sign), hexadecimal (with
@@ -61,20 +67,27 @@ prefix, or octal (with
 .Li 0 )
 prefix. Binary and hexadecimal numbers cannot have a leading sign.
 .Pp
-.Sy Warning :
-Octal numbers are accepted accidentally. They may be removed in a future release.
+.Sy Note :
+The RPL parser accepts octal numbers by accident; this feature may be removed
+in a future release.
 .It Floating-point numbers
-are accepted in the usual syntax,  including scientific
-notation.  Note that the fractional part is
+are accepted in the usual syntax, including scientific notation.  The
+decimal dot and fractional part are
 .Em required
-for the number to be recognized as floating-point.  For example, you must write
+for the number to be recognized as floating-point:
 .Li 3.0
 and
 .Li 3.0e-4
-instead of
+will be parsed as floating-point numbers, whereas
 .Li 3
 and
-.Li 3e-4 .
+.Li 3e-4
+will be parsed as
+.Li 3 ,
+and
+.Li 3
+followed by
+.Li e-4 .
 .It Lists
 are heterogeneous collections of different objects delimited by
 .Li {} ,
@@ -84,14 +97,15 @@ Unlike vectors and matrices, which can contain only numbers, lists can contain
 also
 .Em unevaluated
 names.  Lists serve thus also as a quoting mechanism: wrapping a name into a list
-will prevent its immediate evaluation.  This mechanism, combined with the
+will prevent its immediate evaluation.  This feature can be used to emulate a
+simple macro facility: lists of commands can be stored to and recalled from
+variables, and executed with the
 .Li eval
-word, can be used to make simple sequences of commands (macros), store them
-into variables, and recall and execute them on demand.
+operator.
 .Pp
 .Sy Note :
 In current implementation, lists cannot be nested and can conatin only numbers
-and names.  This restriction will be removed later on.
+and names.  This restriction will be lifted in future revisions.
 .It Vectors
 are collections of elements delimited by
 .Li [] ,
@@ -102,7 +116,7 @@ with individual elements delimited by spaces, e.g.:
 Due to Ruby's implementation of vectors, they can contain elements other than
 numbers. Currently, the parser allows only numbers.
 .It Matrices
-are entered as vectors of vectrors.  For example, a 2x3 matrix is
+are entered as vectors of vectors.  For example, a 2x3 matrix is
 entered as
 .Dl [[1 2 3] [4 5 6]]
 If the rows have unequal lengths, an error will be reported.
@@ -113,12 +127,12 @@ Unless placed in a list, names are automatically looked up and their contents
 evaluated. RPL code may store only data objects into variables; new functions
 can be defined only in Ruby.
 .El
-.Ss Function reference
+.Ss Operator reference
 This section lists currently implemented functions by group.  Where reasonable,
 functions are overloaded with their established meanings, e.g.,
 .Li + ,
 can add numbers (any combination of integers and floating-point), as well as
-vectors and matrices of equal dimensions.
+vectors and matrices of compatible dimensions.
 .Bl -tag
 .It Constants
 .Li PI, E
@@ -157,6 +171,7 @@ are defined for all meaningful combinations of vectors, matrices and scalars.
 can be used to divide a vector with a number, as well as to solve linear systems:
 \&"dividing" a vector by a matrix computes the matrix inverse and multiplies it
 with the vector.
+.Pp
 .Li dot, cross
 compute dot and cross products.  The latter is defined only for 3-D vectors.
 .Pp
@@ -178,8 +193,28 @@ of a vector:
 resulting in
 .Dl [-9 -8 -7]
 .El
-.Sh THE lrpl CLIENT PROGRAM
-.Sh IMPLEMENTATION NOTES
+.Sh THE INTERACTIVE SHELL
+The shell implements a simple REPL (read-eval-print loop) and must be invoked
+executing the Ruby interpreter on the
+.Li lrpl.rb
+script, as in:
+.Dl ruby lrpl.rb
+Currently, no command-line options are defined.
+.Pp
+The input is line-based, i.e., an input line
+.Em must
+be complete.  In other words, it is not allowed to split a long input, such as
+a matrix, into multiple lines.  The input is immediately parsed and executed,
+and if no errors occurred, the resulting stack is displayed; otherwise, only
+an error reported.
+.Pp
+The shell behavior can be controlled by
+.Em pseudo-commands
+which
+.Em always
+begin with a period, e.g.
+.Dl .hex
+.Ss Pseudo-command reference
 .Sh REFERENCES
 .Sh AUTHORS
 .An Zeljko Vrba
