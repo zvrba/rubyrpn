@@ -49,8 +49,7 @@ private
       puts "--EMPTY STACK--"
     else
       @sequencer.stack.each.with_index do |obj, i|
-        format = "%03d: " + find_format(obj)
-        puts sprintf(format, @sequencer.stack.length-i, obj)
+        puts sprintf("%03d: %s", @sequencer.stack.length-i, format_obj(obj))
       end
     end
   end
@@ -66,13 +65,13 @@ private
     $_.chomp! if gets
   end
 
-  def find_format(obj)
+  def format_obj(obj)
     k = obj.class
-    while k != Object
-      return @formats[k] if @formats[k]
+    begin
+      f = "f_#{k.to_s}".to_sym
       k = k.superclass
-    end
-    return @formats[:DEFAULT]
+    end until self.respond_to?(f, true)
+    self.send(f, obj)
   end
 
   # COMMAND HANDLERS
@@ -92,6 +91,21 @@ private
 
   def do_ws(args)
     @formats[:WORDSIZE] = args[0].to_i
+  end
+
+  # TYPE FORMATTERS
+
+  def f_Integer(x)
+    return sprintf @formats[Integer], x
+  end
+
+  def f_Float(x)
+    return sprintf @formats[Float], x
+  end
+
+  # Default formatter!
+  def f_Object(x)
+    return x.inspect
   end
 
 end
