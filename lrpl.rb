@@ -11,6 +11,8 @@ class Ledit
 
     @formats   = {}
     @lasterr   = nil
+
+    @formats[:DEFAULT] = proc { |o| o.inspect }
   end
 
   def main
@@ -27,19 +29,23 @@ class Ledit
     end
   end
 
+  def print_stack
+    if @sequencer.stack.empty? then
+      puts "--EMPTY STACK--"
+    else
+      @sequencer.stack.each.with_index do |obj, i|
+        formatter = @formats[obj.class] || @formats[:DEFAULT]
+        puts sprintf("%03d: %s", @sequencer.stack.length-i, formatter.call(obj))
+      end
+    end
+  end
+
   def prompt
     if @lasterr
       STDERR.puts "ERROR: #{@lasterr}"
       @lasterr = nil
     else
-      formatted_stack = @sequencer.format_stack @formats
-      if formatted_stack.empty?
-        puts "--EMPTY STACK--"
-      else
-        formatted_stack.each.with_index do |item, i|
-          puts sprintf("%03d: %s", formatted_stack.length-i, item)
-        end
-      end
+      print_stack
     end
     print "\nRPN> "
     $_.chomp! if gets
