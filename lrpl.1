@@ -55,7 +55,7 @@ existing Ruby code.
 The following two subsections describe currently implemented data-types and
 operators.
 .Ss Data types
-.Bl -hang -width "AB"
+.Bl -hang -offset indent
 .It Integer numbers
 are signed and of unlimited precision. They may be entered in decimal
 (optionally with leading minus sign), hexadecimal (with
@@ -215,6 +215,30 @@ which
 begin with a period, e.g.
 .Dl .hex
 .Ss Pseudo-command reference
+.Bl -tag
+.It Display control
+.Li .hex, .dec
+set integer base.
+.Pp
+.Li .ws
+sets the word-size in bits.
+.Sy Note :
+this currently controls only the display; calculations are performed in full
+precision.
+.It Miscellaneous
+.Li .quit
+.El
 .Sh REFERENCES
+Stable links to the original user manual for HP's calculators are somewhat
+hard to find.  A lot of documentation and tutorials may be found in the
+documentation sections on the following sites:
+.Bd -literal -offset indent
+http://www.hpcalc.org
+http://hpmuseum.org
+http://www.hpmuseum.org/rpn.htm
+.Ed
+.Pp
+The last link gives a short introduction to the RPN notation and further
+pointers.
 .Sh AUTHORS
 .An Zeljko Vrba
