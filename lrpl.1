@@ -1,244 +1,278 @@
 .\" lrpl
-.Dd November 05, 2011
-.Os Ruby 1.9.2
-.Dt lrpl
-.Sh Ruby RPL implementation
-.Nm lrpl
-.Nd RPL interactive shell
-.Sh SYNOPSIS
-.Fd lrpl
-.Sh DESCRIPTION
+.TH LRPL 1 "2011-11-20" "" "User Commands"
+.SH NAME
+lrpl \- interactive RPL shell
+.SH SYNOPSIS
+.B lrpl
+.SH DESCRIPTION
 This RPL implementation consists of two parts:
-.Bl -bullet
-.It
+.IP -
 An extensible library implementing the core RPL data-types and operators, and
-.It
-A text-based shell,
-.Nm ,
-intended to give the user the experience similar to that of using a HP-28
-calculator.
-.El
-.Pp
-This is
-.Em only
-a reference manual and assumes that the reader is well acquainted with the
-philosophy behind RPN.  The following sections describe the particulars of
-this RPL implementation (contained in the
-.Li RPL
+.IP -
+A text-based shell intended to give the user the experience similar to that
+of using a HP-28 calculator.
+.PP
+This is a reference manual
+.B only
+and assumes that the reader is well acquainted with the philosophy behind the
+reverse Polish notation
+.SM (RPN)
+and the
+.SM RPL
+language.  The following sections describe the particulars of this
+.SM RPL
+implementation (contained in the
+.SM RPL
 module), features of the
-.Nm
+.I lrpl
 interactive shell, and gives pointers to introductions and tutorials about the
 RPN notation and the RPL language.
-.Sh LANGUAGE
-The implementation follows the fundamental RPL philosophy: there are a variety
-of data-types, a (global) stack holding values, named variables, and operators
-that are overloadable by the number and type of arguments.
-.Pp
-As in RPL, operators and variables live in the same namespace, but the
-implementation, will
-.Em not
+.SH LANGUAGE
+The implementation follows the fundamental
+.SM RPL
+philosophy: there are a variety of data-types, a (global) stack holding
+values, named variables, and operators that are overloadable by the number and
+type of arguments.
+.PP
+As in
+.SM RPL,
+operators and variables live in the same namespace, but the implementation,
+will
+.B not
 allow redefinitions of operators; only new overloads may be added.  By
 convention, all system-defined names, with the exception of
-.Li E
+.I E
 and
-.Li PI ,
+.I PI,
 begin with a lower-case letter or a special symbol.  Thus, using capitalized
 variable names will ensure that there won't occur any clashes with already
 existing names.
-.Pp
-The
-.Em major difference
-from other RPL implementations is that general programmability "from within"
-is not supported: new functions and data-types must be defined by extending
-existing Ruby code.
-.Pp
+.PP
+A
+.B major difference
+from other
+.SM RPL
+implementations is that general programmability "from within" is not
+supported: new functions and data-types must be defined by extending existing
+Ruby code.
+.PP
 The following two subsections describe currently implemented data-types and
 operators.
-.Ss Data types
-.Bl -hang -offset indent
-.It Integer numbers
-are signed and of unlimited precision. They may be entered in decimal
-(optionally with leading minus sign), hexadecimal (with
-.Li 0x )
+.SS Data types
+.IP Integer
+Integers are signed and of unlimited precision. They may be entered in
+decimal (optionally with leading minus sign), hexadecimal (with
+.IR 0x )
 prefix,
 binary (with
-.Li 0b )
+.IR 0b )
 prefix, or octal (with
-.Li 0 )
+.IR 0 )
 prefix. Binary and hexadecimal numbers cannot have a leading sign.
-.Pp
-.Sy Note :
+.IP
+.BR Note :
 The RPL parser accepts octal numbers by accident; this feature may be removed
 in a future release.
-.It Floating-point numbers
-are accepted in the usual syntax, including scientific notation.  The
-decimal dot and fractional part are
-.Em required
+.IP Float
+Floating-point numbers are accepted in the usual syntax, including scientific
+notation.  The decimal dot and fractional part are
+.B required
 for the number to be recognized as floating-point:
-.Li 3.0
+.I 3.0
 and
-.Li 3.0e-4
+.I 3.0e-4
 will be parsed as floating-point numbers, whereas
-.Li 3
+.I 3
 and
-.Li 3e-4
+.I 3e-4
 will be parsed as
-.Li 3 ,
+.IR 3 ,
 and
-.Li 3
+.I 3
 followed by
-.Li e-4 .
-.It Lists
-are heterogeneous collections of different objects delimited by
-.Li {} ,
+.IR e-4 .
+.IP List
+Lists are heterogeneous collections of different objects delimited by
+.IR {} ,
 for example:
-.Dl { 1 2 a }
+.RS
+{ 1 2 a }
+.RE
+.IP
 Unlike vectors and matrices, which can contain only numbers, lists can contain
 also
-.Em unevaluated
-names.  Lists serve thus also as a quoting mechanism: wrapping a name into a list
-will prevent its immediate evaluation.  This feature can be used to emulate a
+.B unevaluated
+names.  Lists serve thus also as a quoting mechanism: wrapping a name into a
+list will prevent its evaluation.  This feature can be used to emulate a
 simple macro facility: lists of commands can be stored to and recalled from
 variables, and executed with the
-.Li eval
+.I eval
 operator.
-.Pp
-.Sy Note :
+.IP
+.BR Note :
 In current implementation, lists cannot be nested and can conatin only numbers
 and names.  This restriction will be lifted in future revisions.
-.It Vectors
-are collections of elements delimited by
-.Li [] ,
+.IP Vector
+Vectors are collections of elements delimited by
+.IR [] ,
 with individual elements delimited by spaces, e.g.:
-.Dl [ 1 2 ]
-.Pp
-.Sy Note :
-Due to Ruby's implementation of vectors, they can contain elements other than
-numbers. Currently, the parser allows only numbers.
-.It Matrices
-are entered as vectors of vectors.  For example, a 2x3 matrix is
-entered as
-.Dl [[1 2 3] [4 5 6]]
-If the rows have unequal lengths, an error will be reported.
-.It Names
-may be constructed from all alphanumeric and some punctuation characters.  A
-name can refer to a function or a data object (one of the types listed above).
-Unless placed in a list, names are automatically looked up and their contents
-evaluated. RPL code may store only data objects into variables; new functions
-can be defined only in Ruby.
-.El
-.Ss Operator reference
+.RS
+[ 1 2 ]
+.RE
+.PP
+.IP Matrix
+Matrices are entered as vectors of vectors.  For example, a 2x3 matrix is
+entered (on a single line!) as:
+.RS
+[[1 2 3] [4 5 6]]
+.RE
+.IP Name
+Variable names may be constructed from all alphanumeric and some punctuation
+characters.  A name can refer to a function or a data object (one of the types
+listed above).  Unless placed in a list, names are automatically looked up and
+their contents evaluated.
+.SM RPL
+code may store only data objects into variables; new functions can be defined
+only in Ruby.
+.SS Operator reference
 This section lists currently implemented functions by group.  Where reasonable,
 functions are overloaded with their established meanings, e.g.,
-.Li + ,
-can add numbers (any combination of integers and floating-point), as well as
+.IR + ,
+can add any combination of integer and floating-point numbers, as well as
 vectors and matrices of compatible dimensions.
-.Bl -tag
-.It Constants
-.Li PI, E
-.It Arithmetic and transcedental functions
-.Li +, -, *, /, %, pow, mod, neg, abs, inv, floor, ceil, trunc, r>d
-(radians to degrees),
-.Li d>r
-(degrees to radians),
-all unary and binary functions from the
-.Li Math
+.IP Constants
+.IR PI , E
+.IP "Arithmetic and transcedental functions"
+.IR + ,
+.IR - ,
+.IR * ,
+.IR / ,
+.IR % ,
+.IR pow ,
+.IR mod ,
+.IR neg ,
+.IR abs ,
+.IR inv ,
+.IR floor ,
+.IR ceil ,
+.IR trunc ,
+.IR r>d " (radians to degrees),"
+.IR d>r " (degrees to radians),"
+and all unary and binary functions from the
+.I Math
 module.
-.It Relational operators
-.Li <, <=, >, >=, <>, ==
-.Pp
-.Sy Note :
+.IP "Bitwise operators"
+.IR stws ", " rcws
+set and recall the current word size for integer arithmetic. If 0, all integer
+arithmetic is performed in unlimited precision.
+.IP
+.IR and ", " or ", " xor ", " not
+perform the usual bitwise Boolean operations.
+.IP
+.IR shl ", " shr ", " shlx ", " shrx
+shift an integer to left or right by one or multiple bits.
+.IP "Relational operators"
+.IR < ,
+.IR <= ,
+.IR > ,
+.IR >= ,
+.IR <> ,
+.IR ==
+.P
+.IP
+.BR Note :
 These operators return Boolean flags (true/false), which cannot be used by any
 other functions at the moment.
-.It Stack manipulation
-.Li drop, dup, over, swap, rot, unrot, clear, eval
-.It Variable manipulation
-.Li !
-takes a list of names and pops stack elements storing each into the corresponding
-variable named in the list. Top of stack is stored into the
-.Em last
-variable. An error will be reported if there is insufficient number of elements on
-the stack or a name refers to a function.
-.Pp
-.Li purge
-takes a list of names and removes definition of each variable.  An error is reported
-if a variable does not exist or refers to a function.
-.It Matrix and vector algebra
-.Li +, -, *
+.IP "Stack manipulation"
+.IR drop ", " dup ", " over ", " swap ", " rot ", " unrot ", " clear ", " eval
+.IP "Variable manipulation"
+.I !
+takes a list of names and pops stack elements storing each into the
+corresponding variable named in the list. Top of stack is stored into the
+.B last
+variable. An error will be reported if there is insufficient number of
+elements on the stack or a name refers to a function.
+.IP
+.I purge
+takes a list of names and removes definition of each variable.  An error is
+reported if a variable does not exist or refers to a function.
+.IP "Matrix and vector algebra"
+.IR +,
+.IR -,
+.IR *
 are defined for all meaningful combinations of vectors, matrices and scalars.
-.Pp
-.Li /
-can be used to divide a vector with a number, as well as to solve linear systems:
-\&"dividing" a vector by a matrix computes the matrix inverse and multiplies it
-with the vector.
-.Pp
-.Li dot, cross
+.IP
+.I /
+can be used to divide a vector with a number, as well as to solve linear
+systems: \&"dividing" a vector by a matrix computes the matrix inverse and
+multiplies it with the vector.
+.IP
+.IR dot ", " cross
 compute dot and cross products.  The latter is defined only for 3-D vectors.
-.Pp
-.Li det, inv, trn 
+.IP
+.IR det , inv , trn 
 compute matrix determinant, inverse, and transpose.
-.Pp
-.Li idn
+.IP
+.I idn
 takes a numeric argument N and constructs an NxN identity matrix.
-.Pp
-.Li diag->
+.IP
+.I "diag->"
 takes a vector and creates a diagonal matrix with the vector elements on the
 diagonal.
-.It Collective functions
-.Li ~ (
-mnemonic: thread) applies a unary or binary operation elementwise on any combination
-of vectors and numbers.  For example, the following subtracts 10 from each element
-of a vector:
-.Dl [1 2 3] { 10 - } ~
+.IP "Collective functions"
+.IR ~ " (mnemonic: thread)"
+applies a unary or binary operation elementwise on any combination of vectors
+and numbers.  For example, the following subtracts 10 from each element of a
+vector:
+.RS
+[1 2 3] { 10 - } ~
+.RE
 resulting in
-.Dl [-9 -8 -7]
-.El
-.Sh THE INTERACTIVE SHELL
+.I "[-9 -8 -7]"
+.SS THE INTERACTIVE SHELL
 The shell implements a simple REPL (read-eval-print loop) and must be invoked
 executing the Ruby interpreter on the
-.Li lrpl.rb
+.I lrpl.rb
 script, as in:
-.Dl ruby lrpl.rb
+.RS
+ruby lrpl.rb
+.RE
 Currently, no command-line options are defined.
-.Pp
+.PP
 The input is line-based, i.e., an input line
-.Em must
+.B must
 be complete.  In other words, it is not allowed to split a long input, such as
 a matrix, into multiple lines.  The input is immediately parsed and executed,
 and if no errors occurred, the resulting stack is displayed; otherwise, only
 an error reported.
-.Pp
+.PP
 The shell behavior can be controlled by
-.Em pseudo-commands
+.I pseudo-commands
 which
-.Em always
+.B always
 begin with a period, e.g.
-.Dl .hex
-.Ss Pseudo-command reference
+.I ".hex"
+.SS Pseudo-command reference
 .Bl -tag
-.It Display control
-.Li .hex, .dec
+.IP "Display control"
+.IR ".hex" ,
+.IR ".dec"
 set integer base.
-.Pp
-.Li .ws
-sets the word-size in bits.
-.Sy Note :
-this currently controls only the display; calculations are performed in full
-precision.
-.It Miscellaneous
-.Li .quit
-.El
-.Sh REFERENCES
+.IP Miscellaneous
+.I .quit
+.SH REFERENCES
 Stable links to the original user manual for HP's calculators are somewhat
 hard to find.  A lot of documentation and tutorials may be found in the
 documentation sections on the following sites:
-.Bd -literal -offset indent
+.IP
 http://www.hpcalc.org
+.IP
 http://hpmuseum.org
+.IP
 http://www.hpmuseum.org/rpn.htm
-.Ed
-.Pp
-The last link gives a short introduction to the RPN notation and further
-pointers.
+.PP
+The last link gives a short introduction to the
+.SM RPN
+notation and further pointers.
 .Sh AUTHORS
 .An Zeljko Vrba

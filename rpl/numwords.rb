@@ -10,7 +10,18 @@ module RPL
         defop("PI", []) { Math::PI }
         defop("E", [])  { Math::E }
 
-        # Binary ops
+        # Arithmetic specialized for integers (modular arithmetic)
+        defop("+",   [Integer, Integer]) { |a,b| (a+b)   & @wordmask }
+        defop("-",   [Integer, Integer]) { |a,b| (a-b)   & @wordmask }
+        defop("*",   [Integer, Integer]) { |a,b| (a*b)   & @wordmask }
+        defop("/",   [Integer, Integer]) { |a,b| (a/b)   & @wordmask }
+        defop("pow", [Integer, Integer]) { |a,b| (a**b)  & @wordmask }
+        defop("mod", [Integer, Integer]) { |a,b| (a%b)   & @wordmask }
+        defop("neg", [Integer])          { |x|   (-x)    & @wordmask }
+        defop("abs", [Integer])          { |x|   (x.abs) & @wordmask }
+        defop("sq",  [Integer])          { |x|   (x*x)   & @wordmask }
+
+        # Binary ops: all other numbers
         defop("+",   [Numeric, Numeric]) { |a,b| a+b }
         defop("-",   [Numeric, Numeric]) { |a,b| a-b }
         defop("*",   [Numeric, Numeric]) { |a,b| a*b }
@@ -24,7 +35,7 @@ module RPL
         defop(">",  [Numeric, Numeric]) { |a,b| a>b }
         defop(">=", [Numeric, Numeric]) { |a,b| a>=b }
         defop("<>", [Numeric, Numeric]) { |a,b| a!=b }
-        defop("==",  [Numeric, Numeric]) { |a,b| a==b }
+        defop("==", [Numeric, Numeric]) { |a,b| a==b }
         
         # Unary ops
         defop("neg",   [Numeric]) { |x| -x }

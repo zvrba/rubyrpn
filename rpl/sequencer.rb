@@ -10,6 +10,7 @@ module RPL
       @walker = Walker.new
       @stack  = []
       @names  = {}
+      self.wordsize = 0
     end
 
     #
@@ -26,6 +27,20 @@ module RPL
       tokens.each { |token|
         if token.respond_to? :xt then token.xt self else @stack << token end
       }
+    end
+
+    # Get/set wordsize (affects binary ops!)
+
+    def wordsize
+      @wordsize
+    end
+
+    # When given 0, there is no limit to the number of retained bits.
+    # (-1 acts as identity wrt 'bitand' in 2nd complement)
+    def wordsize=(ws)
+      RPL.fail("setws #{ws}", "wordsize must be >= 0") if ws < 0
+      @wordsize = ws
+      @wordmask = ws > 0 ? (1 << ws)-1 : -1
     end
 
 private

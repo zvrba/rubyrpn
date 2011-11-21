@@ -6,6 +6,7 @@ require_relative 'helpers'
 require_relative 'sequencer'
 require_relative 'syswords'
 require_relative 'numwords'
+require_relative 'bitwords'
 require_relative 'lawords'
 
 
@@ -15,6 +16,7 @@ module RPL
       Words.register_numbers_dict   rpl
       Words.register_matrix_dict    rpl
       Words.register_stack_dict     rpl
+      Words.register_bit_dict       rpl
       Words.register_misc_dict      rpl
     end
   end
